@@ -11,6 +11,12 @@ class Database():
          self.OCTIVES = [1,2,3,4]
          self.CORROSPONDING_FREQUENCIES = [55, 58.27, 61.74, 32.70, 34.65 ,65, 36.71 ,38.89 ,41.2 ,43.65 ,46.25 ,49 ,41.91]
         
+    def connect_to_database(self):
+
+        self.connect = sqlite3.connect("tuning_database.db")
+        self.cursor = self.connect.cursor()
+
+        
 
     
     def value_retrieval(self):
@@ -67,8 +73,7 @@ class Database():
 
         does_not_exist= not os.path.exists("tuning_database.db")
 
-        self.connect = sqlite3.connect("tuning_database.db")
-        self.cursor = self.connect.cursor()
+        self.connect_to_database()
 
         if does_not_exist:
 
@@ -84,8 +89,7 @@ class Database():
 
     def set_to_standard_tuning (self):
 
-        self.connect = sqlite3.connect("tuning_database.db")
-        self.cursor = self.connect.cursor()
+        self.connect_to_database()
 
         generic_query = ("SELECT str_1_note,str_2_note,str_3_note,str_4_note,str_5_note,str_6_note FROM TUNINGS WHERE Tuning_name = ?")
         tuning_name = ("standard")
