@@ -10,18 +10,18 @@ class Database():
          self.VALID_VALUES = ["A","A#","B","C","C#","D","D#","E","F","F#","G","G#"]
          self.OCTIVES = [1,2,3,4]
          self.CORROSPONDING_FREQUENCIES = [55, 58.27, 61.74, 32.70, 34.65 ,65, 36.71 ,38.89 ,41.2 ,43.65 ,46.25 ,49 ,41.91]
-        
+
+
     def connect_to_database(self):
 
         self.connect = sqlite3.connect("tuning_database.db")
         self.cursor = self.connect.cursor()
 
-        
-
     
     def value_retrieval(self):
 
         return self.VALID_VALUES
+
 
     def configuration (self): # only runs on if database doesn't already exist
         
@@ -44,6 +44,7 @@ class Database():
           """ 
         self.cursor.execute(table_creation)
         self.connect.commit()
+
 
         standard_tuning_insert = ("""INSERT INTO TUNINGS (
                                 Tuning_name,
@@ -97,3 +98,23 @@ class Database():
         row=self.cursor.fetchone()
         if row: #converts the tuple into a string
             return row
+        
+    
+    def retrieve_database_collum(self,collumn_name):
+
+        self.connect_to_database()
+
+        query = f""" SELECT {collumn_name} FROM TUNINGS """
+        while True:
+            try:
+                self.cursor.execute(query)
+                values=self.cursor.fetchall()
+            except:
+                return ["database retrieval error"]  #theoretically not required as collumn_name is not user defined 
+            
+            results_list = [value[0] for value in values]
+
+            self.connect.close()
+            return results_list
+ 
+            
