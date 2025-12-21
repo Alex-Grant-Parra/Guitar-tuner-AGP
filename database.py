@@ -46,7 +46,8 @@ class Database():
         self.connect.commit()
 
 
-        standard_tuning_insert = ("""INSERT INTO TUNINGS (
+        standard_tuning_insert = ("""
+                                INSERT INTO TUNINGS (
                                 Tuning_name,
                                 str_1_note, str_1_oct,
                                 str_2_note, str_2_oct,
@@ -56,16 +57,17 @@ class Database():
                                 str_6_note, str_6_oct
                                   )
                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""")
+        
         standard_tunings_values = (
-                                      "standard",
-                                        "E", 4,
-                                        "B", 3,
-                                        "G", 3,
-                                        "D", 3,
-                                        "A", 2,
-                                        "E", 2
-
-                                  )
+                                "standard",
+                                "E", 4,
+                                "B", 3,
+                                "G", 3,
+                                "D", 3,
+                                "A", 2,
+                                "E", 2
+                                )
+        
         self.cursor.execute(standard_tuning_insert,standard_tunings_values)
         self.connect.commit()
     
@@ -116,7 +118,7 @@ class Database():
             except:
                 return ["database retrieval error"]  #theoretically not required as collumn_name is not user defined 
             
-            results_list = [value[0] for value in values]
+            results_list = [value[0] for value in values] # converts tuple into list
 
             self.connect.close()
             return results_list
