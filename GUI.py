@@ -177,20 +177,32 @@ class Tuning_editor (tk.Tk):
         self.final_tuning= {1:None,2:None,3:None,4:None,5:None,6:None}
         self.final_tuning_display = (", ".join(str(v) for v in self.final_tuning.values())) # formats the dictionary into a printable list
 
+        self.tunings_list=tk.Listbox(self,selectmode=tk.SINGLE, font=("arial",18),width=30)
+        self.tunings_list.pack(padx=(35,0),side="left",fill="y",expand=False,pady=40)
+
+        tuning_name_list=database.retrieve_database_collum("Tuning_name")
+        for names in tuning_name_list:
+            self.tunings_list.insert(tk.END,names)
+
+        new_tuning_button=tk.Button(self,
+                                   text="Create New Tuning",
+                                   font=("arial",16),
+                                   command=self.create_new_tuning())
+
         notes=database.value_retrieval() # creates all combonations of note and octave
         for octaves in range (1,5):
             for note in notes:
                 note_list.append(f"{note} {octaves}" )
 
         top_container = tk.Frame(self, bg="lightblue")
-        top_container.pack(pady=20, padx=15, anchor="n", fill="x")
+        top_container.pack(pady=20, padx=(0,10), anchor="n", fill="x")
 
 
         choice_frame = tk.Frame(self, bg="lightblue") # groups the comboboxes together 
         choice_frame.pack(pady=20,side="right",padx=20)
 
         name_input_frame = tk.Frame(self, bg = "lightblue" )
-        name_input_frame.pack(pady = 20, padx = 20 ,anchor = "center",fill="x"  )
+        name_input_frame.pack(pady = 20, padx = (0,10),anchor = "center",fill="x"  )
 
         for i in range (1,7): # loops the combobox creation for all 6 strings
 
@@ -209,7 +221,7 @@ class Tuning_editor (tk.Tk):
                                 state = "readonly")
             
             self.note_choice.set("select a note")
-            self.note_choice.pack(side="left",padx=10)
+            self.note_choice.pack(side="left",padx=(0,10))
             
             conformation = tk.Button(individual_frame,
                                      font=("arial",12),
@@ -218,7 +230,7 @@ class Tuning_editor (tk.Tk):
                                      c=self.note_choice: self.confirm_choice(idx, c)
                                      )
             
-            conformation.pack(expand=True, side="left", padx=10)
+            conformation.pack(expand=True, side="left", padx=(0,10))
 
         self.tuning_display = tk.Label(top_container,           # displays the current selected notes
                                         font = ("arial",18),
@@ -226,7 +238,7 @@ class Tuning_editor (tk.Tk):
                                          height= 1,
                                          width = 30
                                          )
-        self.tuning_display.pack(side = "top",anchor= "n",pady=20,padx=1)
+        self.tuning_display.pack(side = "top",anchor= "n",pady=20,padx=(0,1))
 
         back_to_main_menu=tk.Button(self,
                                     width=20,
@@ -265,11 +277,24 @@ class Tuning_editor (tk.Tk):
             self.final_tuning[index] = note # replaces the note with the users choice
             self.update_final_tuning()
             
-        
     
     def update_final_tuning(self):
         self.final_tuning_display = (", ".join(str(v) for v in self.final_tuning.values()))
         self.tuning_display.config(text= self.final_tuning_display)
+
+
+    def create_new_tuning(self):
+        self.new_tuning=True
+
+    
+    def edit_tuning(self):
+
+        
+        name_index=self.tunings_list.curselection()[0]
+        tuning_name=self.tunings_list.get(name_index)
+
+
+
 
 
 
