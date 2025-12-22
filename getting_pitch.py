@@ -115,8 +115,3 @@ class Getting_pitch():
             fundamental_frequency=0
         
         return fundamental_frequency
-
-    
-    
-
-

@@ -74,14 +74,18 @@ class main_menu(tk.Tk):
 
 
     def open_tuning_interface(self):
+        self.database.close_connection()
         self.destroy()
         instance=Tuning_interface()
         instance.mainloop()
 
+
     def open_database_menu(self):
+        self.database.close_connection()
         self.destroy()
         instance=Edit_or_choose_tuning()
         instance.mainloop()
+
 
 
 
@@ -90,27 +94,26 @@ class Tuning_interface(tk.Tk):
 
 
     def __init__(self):
-        
+        super().__init__()
 
-        self.root=tk.Tk()
-        self.root.geometry("1600x900")
-        self.root.configure(bg="lightblue")
+        self.geometry("1600x900")
+        self.configure(bg="lightblue")
         self.audio_import=Getting_pitch()
         self.pitch = 0
     
-        self.bar=Progressbar(self.root,
+        self.bar=Progressbar(self,
                         orient=HORIZONTAL,
                         length=1000,
                         mode="indeterminate",)
         
-        back_to_main_menu=tk.Button(self.root,
+        back_to_main_menu=tk.Button(self,
                                     width=20,
                                     height=3,
                                     font=("arial",14),
                                     text="Back To Main Menu",
                                     command=self.return_to_main_menu)
         
-        self.hertz_value = tk.Label(self.root,
+        self.hertz_value = tk.Label(self,
                                text = f"{self.pitch} Hz",
                                font = ("arial",24,"bold"),
                                bg = "lightblue",
@@ -126,8 +129,8 @@ class Tuning_interface(tk.Tk):
         self.bar["value"]=0
         self.audio_import.getting_pitch_start()
         self.bar.pack(pady=100,side="top")
-        self.root.after(100, self.update_bar)
-        self.root.mainloop()
+        self.after(100, self.update_bar)
+        self.mainloop()
 
         
 
@@ -169,10 +172,11 @@ class Tuning_editor (tk.Tk):
     def __init__(self):
         super().__init__()
 
-        database=Database()
+        self.database=Database()
         self.title("Tuning Selector")
         self.geometry("1600x900")
         self.configure(bg="lightblue")
+        self.new_tuning=True
         note_list=[]
         self.final_tuning= {1:None,2:None,3:None,4:None,5:None,6:None}
         self.final_tuning_display = (", ".join(str(v) for v in self.final_tuning.values())) # formats the dictionary into a printable list
@@ -180,7 +184,7 @@ class Tuning_editor (tk.Tk):
         self.tunings_list=tk.Listbox(self,selectmode=tk.SINGLE, font=("arial",18),width=30)
         self.tunings_list.pack(padx=(35,0),side="left",fill="y",expand=False,pady=40)
 
-        tuning_name_list=database.retrieve_database_collum("Tuning_name")
+        tuning_name_list=self.database.retrieve_database_collum("Tuning_name")
         for names in tuning_name_list:
             self.tunings_list.insert(tk.END,names)
 
@@ -189,7 +193,7 @@ class Tuning_editor (tk.Tk):
                                    font=("arial",16),
                                    command=self.create_new_tuning())
 
-        notes=database.value_retrieval() # creates all combonations of note and octave
+        notes=self.database.value_retrieval() # creates all combonations of note and octave
         for octaves in range (1,5):
             for note in notes:
                 note_list.append(f"{note} {octaves}" )
@@ -289,12 +293,12 @@ class Tuning_editor (tk.Tk):
     
     def edit_tuning(self):
 
-        
+        self.new_tuning=False
         name_index=self.tunings_list.curselection()[0]
         tuning_name=self.tunings_list.get(name_index)
+        tuning_values=self.database.retrive_tuning(tuning_name)
 
-
-
+        self.tuning_display.config(text=tuning_values)
 
 
 

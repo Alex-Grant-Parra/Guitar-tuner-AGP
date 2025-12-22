@@ -17,6 +17,11 @@ class Database():
         self.connect = sqlite3.connect("tuning_database.db")
         self.cursor = self.connect.cursor()
 
+
+    def close_connection(self):
+
+        self.connect.close()
+
     
     def value_retrieval(self):
 
@@ -86,9 +91,9 @@ class Database():
 
         else:
             print("Database initialised ")
-
        
         self.connect.close()
+
 
     def retrive_tuning (self,tuning_name):
 
