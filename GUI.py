@@ -5,28 +5,26 @@ from tkinter.ttk import *
 from getting_pitch import Getting_pitch
 from database import Database
 
-class global_methods():
+
+
+class general_methods(tk.Tk):
 
     def __init__(self):
-        pass
+        super().__init__()
 
+    
+    def center_screen(self):
+        self.update_idletasks()
 
-    def get_screen_size (self):
-        pass
+        screen_width = self.winfo_screenwidth()
+        screen_heigth = self.winfo_screenheight()
 
-
-
-
-
-
-
-
+        self.geometry(f"{screen_width}x{screen_heigth}+0+0")
 
 
 
 
-
-class main_menu(tk.Tk,global_methods):
+class main_menu(general_methods):
 
 
 
@@ -35,7 +33,7 @@ class main_menu(tk.Tk,global_methods):
 
         self.current_tuning=""
         self.title("Guitar Tuner")
-        self.geometry(f"{self.winfo_screenwidth()}x{self.winfo_screenheight()}")
+        self.center_screen()
         self.configure(bg="lightblue")
         self.database = Database()
         self.database.check_exist()
@@ -112,14 +110,16 @@ class main_menu(tk.Tk,global_methods):
 
 
 
-class Tuning_interface(tk.Tk):
+
+
+class Tuning_interface(general_methods):
 
 
 
     def __init__(self):
         super().__init__()
 
-        self.geometry("1600x900")
+        self.center_screen()
         self.configure(bg="lightblue")
         self.audio_import=Getting_pitch()
         self.pitch = 0
@@ -189,7 +189,7 @@ class Tuning_interface(tk.Tk):
 
 
 
-class Tuning_editor (tk.Tk):
+class Tuning_editor (general_methods):
 
 
     def __init__(self):
@@ -197,7 +197,7 @@ class Tuning_editor (tk.Tk):
 
         self.database=Database()
         self.title("Tuning Selector")
-        self.geometry("1600x900")
+        self.center_screen()
         self.configure(bg="lightblue")
         self.new_tuning=True
         note_list=[]
@@ -405,7 +405,7 @@ class Tuning_editor (tk.Tk):
             
                 print("Creating New Tuning")
                 new_tuning_name = self.tuning_namer_box.get()
-                self.database.insert_new_tuning(tuning_values=tuning_proper_format, tuning_name = new_tuning_name, new_tuning_name = new_tuning_name)
+                self.database.insert_new_tuning(tuning_values=tuning_proper_format, tuning_name = new_tuning_name)
 
             elif self.new_tuning == False:
 
@@ -421,13 +421,13 @@ class Tuning_editor (tk.Tk):
 
 
 
-class Edit_or_choose_tuning(tk.Tk):
+class Edit_or_choose_tuning(general_methods):
 
 
     def __init__(self):
         super().__init__()
         self.title("Edit or Choose Tuning")
-        self.geometry("1600x900")
+        self.center_screen()
         self.configure(bg="lightblue")
 
         self.edit_button = tk.Button(self,
