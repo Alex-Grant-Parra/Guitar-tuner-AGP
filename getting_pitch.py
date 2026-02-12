@@ -30,8 +30,11 @@ class Getting_pitch():
 
 
     def getting_pitch_extraction(self):#needs to be looped 
-
-        chunks=self.__stream.read(self.__chunk)
+        
+        try:
+            chunks=self.__stream.read(self.__chunk)
+        except:
+            return 0
         self.data = np.frombuffer(chunks,dtype=np.float32)#turns the raw data into float32 format
         
         # self.data=self.increase_gain()
@@ -40,8 +43,7 @@ class Getting_pitch():
         self.data=np.array(self.data,np.float32)
 
 
-        final_data_Hz=self.DFT_analyser()
-        print(final_data_Hz)
+        final_data_Hz=self.FT_analyser()
 
 
         return final_data_Hz#final output
@@ -71,7 +73,7 @@ class Getting_pitch():
     
 
 
-    def DFT_analyser(self, harmonics=5, fmin=50, fmax=1000):
+    def FT_analyser(self, harmonics=5, fmin=50, fmax=1000):
         
         FFT_SIZE = 8192 
         windowed = self.data[:FFT_SIZE] * np.hamming(FFT_SIZE)
@@ -101,7 +103,7 @@ class Getting_pitch():
         if len(search_spec) == 0:
             return 0  # No frequencies in the specified range
         
-         # Find rough peak in restricted range
+         # Find rough estimate for fundomental frequency 
         rough_idx = np.argmax(search_spec)
         
 

@@ -10,17 +10,21 @@ from database import Database
 class general_methods():
 
     def __init__(self):
-        self.chosen_tuning_name = ""
+        self.chosen_tuning_name=""
+        self.database = Database()
     
 
-    def start_up (self):
-        try:
-            database_object= Database()
-            tuning_names=database_object.retrieve_database_collum("Tuning_name")
-            self.chosen_tuning_name = str(tuning_names[0])
-        except:
-            self.chosen_tuning_name =None
-        print(self.chosen_tuning_name)
+    def start_up (self): #connects to database and sets the tuning to the first tuning in the database
+
+        database_object= Database()
+        tuning_names=database_object.retrieve_database_collum("Tuning_name")
+        self.intial_tuning_name = str(tuning_names[0])
+
+
+    def get_tuning_name(self):
+
+        return self.intial_tuning_name
+
 
 
 class App_interface(tk.Tk,general_methods):
@@ -30,10 +34,11 @@ class App_interface(tk.Tk,general_methods):
         super().__init__()
         self.title("Guitar Tuner")
         self.center_screen()
+  
 
         container = tk.Frame(self)
         container.pack(fill="both", expand=True)
-
+        tuning_name=self.get_tuning_name()
         
         # Configure grid weights so frames expand to fill screen
         container.grid_rowconfigure(0, weight=1)
@@ -44,8 +49,8 @@ class App_interface(tk.Tk,general_methods):
         self.frames={}
 
         for Page in (main_menu, Tuning_editor, Tuning_interface, Edit_or_choose_tuning, Tuning_list):
-            if Page == main_menu:
-                frame = Page(controller=self, parent=container)
+            if Page == main_menu or Page ==Tuning_list:
+                frame = Page(controller=self, parent=container,chosen_tuning_name=tuning_name)
             else:
                 frame = Page(parent=container, controller=self)
             self.frames[Page] = frame
@@ -82,14 +87,13 @@ class main_menu(tk.Frame,general_methods):
 
 
 
-    def __init__(self,parent, controller):
+    def __init__(self,parent, controller,chosen_tuning_name):
         super().__init__(parent, bg="lightblue")
 
+        self.chosen_tuning_name=chosen_tuning_name
         self.controller =controller
         self.current_tuning=""
-        self.database = Database()
-
-
+        self.database=Database()
         header_frame = tk.Frame(self, bg="lightblue")
         header_frame.pack(side="top",fill = "x", pady=10)
         tune_button=tk.Button(self, 
@@ -151,9 +155,8 @@ class main_menu(tk.Frame,general_methods):
 
 
     def on_show(self):
-        print("this is running")
-        self.current_tuning=""
         self.database.check_exist()
+        self.current_tuning=""
         try:
             notes, octaves = self.database.retrive_tuning(self.chosen_tuning_name)
             if notes is None or octaves is None:
@@ -164,11 +167,9 @@ class main_menu(tk.Frame,general_methods):
                     self.current_tuning +=( f"{notes[i]} {octaves[i]}, ")
         except Exception as e:
             print(f"Error: No Tuning selected")
-            self.current_tuning = "No tuning selected"
-        print(self.current_tuning)
-        
-        self.current_tuning_display.configure(text=self.current_tuning)
-
+            self.current_tuning = "retrieval error"
+        self.current_tuning_display.config(text="")
+        self.current_tuning_display.config(text=self.current_tuning)
 
     def on_hide(self):
         self.database.close_connection()
@@ -188,7 +189,7 @@ class Tuning_interface(tk.Frame,general_methods):
         self.controller =controller
         self.audio_import=Getting_pitch()
         self.pitch = 0
-        self.update_job = None  # Initialize update_job
+        self.update_job = None 
     
         self.bar=Progressbar(self,
                         orient=HORIZONTAL,
@@ -218,30 +219,31 @@ class Tuning_interface(tk.Frame,general_methods):
         self.bar["value"]=0
 
     def on_show(self):
+        self.run =True
         self.audio_import.getting_pitch_start()
         self.bar.pack(pady=100,side="top")
         self.update_job = self.after(100, self.update_bar)
 
-        
+    def on_hide(self):
+        self.run = False
+        print ("false")
 
-        
 
     def update_bar(self):
+    
+        if self.run==True:
+            self.pitch =self.audio_import.getting_pitch_extraction()
+            self.update_hertz_value()
+            
+            if self.pitch==0:
+                pass
+            else:
+                if self.pitch>100:
+                    self.pitch=100
 
-        self.pitch =self.audio_import.getting_pitch_extraction()
-        print(self.pitch)
-        self.update_hertz_value()
-        
-        if self.pitch==0:
-            pass
-        else:
-            if self.pitch>100:
-                self.pitch=100
+                self.bar["value"]=self.pitch
+                self.update()
 
-            self.bar["value"]=self.pitch
-            self.update()
-        # Only schedule the next update if the widget still exists
-        if self.winfo_exists():
             self.update_job = self.after(300, self.update_bar)
 
     def update_hertz_value(self):
@@ -255,10 +257,6 @@ class Tuning_interface(tk.Frame,general_methods):
 
     def on_hide(self):
         self.audio_import.stop()
-
-
-
-
 
 
 
@@ -417,6 +415,7 @@ class Tuning_editor (tk.Frame,general_methods):
 
         self.final_tuning_display = (", ".join(str(v) for v in self.final_tuning.values()))
         self.tuning_display.config(text= self.final_tuning_display)
+        self.update_database_list
 
 
     def create_new_tuning(self):
@@ -426,6 +425,7 @@ class Tuning_editor (tk.Frame,general_methods):
         self.final_tuning= {1:None,2:None,3:None,4:None,5:None,6:None}
         self.final_tuning_display = (", ".join(str(v) for v in self.final_tuning.values()))
         self.update_final_tuning()
+        self.update_database_list()
         
 
     
@@ -450,6 +450,7 @@ class Tuning_editor (tk.Frame,general_methods):
 
         else:
             print("Error: No Tuning selected")
+        self.update_database_list()
 
 
     def tuning_complete(self):
@@ -486,6 +487,8 @@ class Tuning_editor (tk.Frame,general_methods):
 
         else:
             print("Error: Not all strings have been assigned a note")#to be replaced with proper pop up error message
+        
+        self.update_database_list()
                 
 
     def delete_tuning(self):
@@ -496,6 +499,14 @@ class Tuning_editor (tk.Frame,general_methods):
 
     def on_hide(self):
         self.database.close_connection()
+
+    def update_database_list(self):
+
+        self.tunings_list.delete(0,tk.END)
+        tuning_name_list=self.database.retrieve_database_collum("Tuning_name")
+        for names in tuning_name_list:
+            self.tunings_list.insert(tk.END,names)
+
 
 
 
@@ -534,8 +545,87 @@ class Edit_or_choose_tuning(tk.Frame,general_methods):
 
 class Tuning_list(tk.Frame,general_methods):
     
-    def __init__(self,parent,controller):
+    def __init__(self,parent,controller,chosen_tuning_name):
+
         super().__init__(parent,bg="lightblue")
+        self.database=Database()
         self.controller =controller
+        self.__chosen_tuning=""
+        self.current_tuning=""
+        try:
+            notes, octaves=self.database.retrive_tuning(chosen_tuning_name)
+        except:
+            self.current_tuning=None
+        
+        if self.current_tuning != None:
+            for i in range(0,len(notes)):
+                self.current_tuning +=f"{notes[i]} {octaves[i]}, "
+        
+
+        main_menu_button = tk.Button(self,
+                                      text= "Back to Main Menu",
+                                      font=("arial",20),
+                                      command=lambda: self.to_main_menu(self.__chosen_tuning,container=parent))
+        
+        self.tunings_list= tk.Listbox(self,
+                                selectmode=tk.SINGLE,
+                                font=("arial",18),
+                                width=30
+                                ) 
+
+        self.tunings_list.pack(side="left",padx=30,expand=False,fill="y",pady=20)
+        
+        main_menu_button.pack(side="bottom",pady=30)
+
+        tuning_name_list=self.database.retrieve_database_collum("Tuning_name")
+        for names in tuning_name_list:
+            self.tunings_list.insert(tk.END,names)
+
+        self.current_tuning_display = tk.Label(self,
+                                    text = self.current_tuning,
+                                    width =27,
+                                    height = 2,
+                                    font = ("arial",20),
+                                    bg = "white"
+                                    )
+        
+        self.current_tuning_display.pack(side="top",pady=(50,0))
+
+        self.current_tuning_name_label=tk.Label(self,
+                                           text= chosen_tuning_name,
+                                           font=("arial",16),
+                                           background="lightblue")
+
+        self.current_tuning_name_label.pack(side="top",padx=5)
+
+        confirm_choice_button=tk.Button(self,
+                                        text="Confirm Choice",
+                                        command=self.confirm_choice,
+                                        font=("arial",18)
+                                        )
+        
+        confirm_choice_button.pack(side="top",expand=True,pady=(40,0))
+
+
+
+    def confirm_choice (self):
+        
+        tuning_values=""
+        name_index=self.tunings_list.curselection()
+        self.__chosen_tuning= self.tunings_list.get(name_index)
+        notes, octaves=self.database.retrive_tuning(self.__chosen_tuning)
+        for i in range (0,len(notes)):
+            tuning_values+=(f"{notes[i]} {octaves[i]}, ")
+
+        self.current_tuning_display.config(text="")
+        self.current_tuning_display.config(text=tuning_values)
+        self.current_tuning_name_label.config(text=self.__chosen_tuning)
+
+
+    def to_main_menu(self,chosen_tuning,container):
+        
+        self.controller.show_frame(main_menu)
+
+
 
 

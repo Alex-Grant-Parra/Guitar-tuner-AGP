@@ -150,20 +150,9 @@ class Database():
 
         data_to_insert = (tuning_name, *tuning_values[0:13])
 
-        insert_query = f"""
-                                INSERT INTO TUNINGS (
-                                  Tuning_name, 
-                                  str_1_note, str_1_oct, 
-                                  str_2_note, str_2_oct, 
-                                  str_3_note, str_3_oct, 
-                                  str_4_note, str_4_oct, 
-                                  str_5_note, str_5_oct, 
-                                  str_6_note, str_6_oct
-                                )
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         while True:
             try:
-                self.cursor.execute(insert_query, data_to_insert)
+                self.cursor.execute(self.standard_tuning_insert, data_to_insert)
                 self.connect.commit()
             except:
                 print("database insertion error")
