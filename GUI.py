@@ -49,7 +49,7 @@ class App_interface(tk.Tk,general_methods):
         self.frames={}
 
         for Page in (main_menu, Tuning_editor, Tuning_interface, Edit_or_choose_tuning, Tuning_list):
-            if Page == main_menu or Page ==Tuning_list:
+            if Page == main_menu or Page ==Tuning_list or Page == Tuning_interface:
                 frame = Page(controller=self, parent=container,chosen_tuning_name=tuning_name)
             else:
                 frame = Page(parent=container, controller=self)
@@ -198,13 +198,13 @@ class Tuning_interface(tk.Frame,general_methods):
 
 
 
-    def __init__(self,parent,controller):
+    def __init__(self,parent,controller,chosen_tuning_name):
 
         super().__init__(parent, bg="lightblue")
 
         self.database=Database()
         self.controller =controller
-        self.tuning_name="standard"
+        self.tuning_name=chosen_tuning_name
         self.audio_import=Getting_pitch()
         self.pitch = 0
         self.update_job = None 
