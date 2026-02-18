@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter.ttk import * 
 from getting_pitch import Getting_pitch
 from database import Database
-
+import math
 
 
 class general_methods():
@@ -199,13 +199,18 @@ class Tuning_interface(tk.Frame,general_methods):
 
 
     def __init__(self,parent,controller):
+
         super().__init__(parent, bg="lightblue")
 
+        self.database=Database()
         self.controller =controller
+        self.tuning_name="standard"
         self.audio_import=Getting_pitch()
         self.pitch = 0
         self.update_job = None 
-    
+        self.tuning_data_retrival()
+        self.list_string_button=[]
+
         self.bar=Progressbar(self,
                         orient=HORIZONTAL,
                         length=1000,
@@ -227,6 +232,23 @@ class Tuning_interface(tk.Frame,general_methods):
                                
                             )
         self.hertz_value.pack(pady=10)
+
+        self.string_label = tk.Label(self,
+                                    text="No string selected",
+                                    font=("arial",16),
+                                    bg="lightblue")
+        
+        self.string_label.pack(pady=(0,10))
+
+        #generates the buttons for each string
+        btn_frame = tk.Frame(self, bg="lightblue")
+        btn_frame.pack(pady=(0,20))
+
+        for i in range(1,7):
+            string_button = tk.Button(btn_frame, text=f"String {i}", width=10,
+                          command=lambda idx=i: self.select_string(idx))
+            string_button.grid(row=0, column=i-1, padx=5)
+            self.list_string_button.append(string_button)
 
         
         back_to_main_menu.pack(expand=True,side="bottom")
@@ -261,9 +283,11 @@ class Tuning_interface(tk.Frame,general_methods):
 
             self.update_job = self.after(300, self.update_bar)
 
+
     def update_hertz_value(self):
 
         self.hertz_value.config(text = f"{round(self.pitch, 1)} Hz")
+
 
     def return_to_main_menu(self):
         # Cancel any pending after() calls
@@ -273,13 +297,64 @@ class Tuning_interface(tk.Frame,general_methods):
     def on_hide(self):
         self.audio_import.stop()
 
+
     def recieve_tuning(self,tuning_name):
 
         self.tuning_name=tuning_name
+        self.tuning_data_retrival()
+        self.update_tuning_button_values()
+
 
     def tuning_data_retrival (self):
         
         self.notes, self.octaves = self.database.retrive_tuning(self.tuning_name)
+
+    
+    def tuning_bar_scaling(self):
+
+        # convert pitch difference into a progress value 0..100 (50 is in-tune)
+        if not self.target_pitch or self.pitch <= 0:
+            return 0
+        cents_difference = 1200 * math.log2(self.pitch / self.target_pitch)
+        progressbar_value = 50 + cents_difference / 24.0  # scale cents to 0-100 reasonably
+        return max(0, min(100, progressbar_value))
+
+
+    def select_string(self, index):
+
+        if not hasattr(self, "notes") or index-1 >= len(self.notes):
+            self.string_label.config(text="Invalid string / tuning data missing")
+            return
+        
+        note = self.notes[index-1]
+        octave = self.octaves[index-1]
+        freq = self.note_to_frequency(note, octave)
+        print(note, octave,freq)
+        self.selected_string = index
+        self.target_pitch = freq
+        self.string_label.config(text=f"String {index} -> {note} {octave} ({round(freq,2)} Hz)")
+
+
+    def note_to_frequency (self,note,octave):
+        
+        pitch_values=self.database.CORROSPONDING_FREQUENCIES
+        note_list=self.database.VALID_VALUES
+        for i in range(0,len(note_list)-1):
+            if note == note_list[i]:
+                base_pitch=pitch_values[i]
+        target_pitch = base_pitch*(2**octave)
+        return target_pitch
+    
+
+    def update_tuning_button_values(self):
+
+        for i, button in enumerate(self.list_string_button):
+            if i <len(self.notes):
+                note =self.notes[i]
+                octave = self.octaves[i]
+                button.config(text=f"{note}{octave}")
+            else:
+                button.config(text="N/A")
 
 
 
@@ -657,6 +732,7 @@ class Tuning_list(tk.Frame,general_methods):
         tuning_name_list=self.database.retrieve_database_collum("Tuning_name")
         for names in tuning_name_list:
             self.tunings_list.insert(tk.END,names)
+
 
     def send_tuning (self):
 

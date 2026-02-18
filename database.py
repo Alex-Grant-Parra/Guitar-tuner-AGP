@@ -9,7 +9,7 @@ class Database():
          #set hardcoded possible databse entries 
          self.VALID_VALUES = ["A","A#","B","C","C#","D","D#","E","F","F#","G","G#"]
          self.OCTAVES = [1,2,3,4]
-         self.CORROSPONDING_FREQUENCIES = [55, 58.27, 61.74, 32.70, 34.65 ,65, 36.71 ,38.89 ,41.2 ,43.65 ,46.25 ,49 ,41.91]
+         self.CORROSPONDING_FREQUENCIES = [27.50,29.24,30.87,16.35,17.32,18.35,19.45,20.60,21.83,23.12,24.50,25.96]
          self.standard_tuning_insert = ("""
                                 INSERT INTO TUNINGS (
                                 Tuning_name,
