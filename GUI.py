@@ -157,6 +157,24 @@ class main_menu(tk.Frame,general_methods):
     def on_show(self):
         self.database.check_exist()
         self.current_tuning=""
+        self.update_label()
+
+
+
+    def on_hide(self):
+        self.database.close_connection()
+
+
+
+    def recieve_tuning (self,tuning_name):
+
+        self.chosen_tuning_name=tuning_name
+        self.update_label()
+
+
+
+    def update_label (self):
+        
         try:
             notes, octaves = self.database.retrive_tuning(self.chosen_tuning_name)
             if notes is None or octaves is None:
@@ -170,9 +188,6 @@ class main_menu(tk.Frame,general_methods):
             self.current_tuning = "retrieval error"
         self.current_tuning_display.config(text="")
         self.current_tuning_display.config(text=self.current_tuning)
-
-    def on_hide(self):
-        self.database.close_connection()
 
 
 
@@ -258,6 +273,13 @@ class Tuning_interface(tk.Frame,general_methods):
     def on_hide(self):
         self.audio_import.stop()
 
+    def recieve_tuning(self,tuning_name):
+
+        self.tuning_name=tuning_name
+
+    def tuning_data_retrival (self):
+        
+        self.notes, self.octaves = self.database.retrive_tuning(self.tuning_name)
 
 
 
@@ -620,6 +642,7 @@ class Tuning_list(tk.Frame,general_methods):
         self.current_tuning_display.config(text="")
         self.current_tuning_display.config(text=tuning_values)
         self.current_tuning_name_label.config(text=self.__chosen_tuning)
+        self.send_tuning()
 
 
     def to_main_menu(self,chosen_tuning,container):
@@ -628,4 +651,14 @@ class Tuning_list(tk.Frame,general_methods):
 
 
 
+    def on_show (self):
+        
+        self.tunings_list.delete(0,tk.END)
+        tuning_name_list=self.database.retrieve_database_collum("Tuning_name")
+        for names in tuning_name_list:
+            self.tunings_list.insert(tk.END,names)
 
+    def send_tuning (self):
+
+        self.controller.frames[main_menu].recieve_tuning(self.__chosen_tuning)
+        self.controller.frames[Tuning_interface].recieve_tuning(self.__chosen_tuning)
