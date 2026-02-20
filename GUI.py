@@ -211,6 +211,8 @@ class Tuning_interface(tk.Frame,general_methods):
         self.tuning_data_retrival()
         self.list_string_button=[]
         self.target_pitch=None
+        self.filtered_bar_value = 50
+        self.filter_strength = 0.2
 
         self.bar=Progressbar(self,
                         orient=HORIZONTAL,
@@ -280,7 +282,9 @@ class Tuning_interface(tk.Frame,general_methods):
                     self.pitch=100
 
                 bar_value = self.tuning_bar_scaling()
-                self.bar["value"] = bar_value
+                smoothed_bar_value = self.low_pass_filter(bar_value)
+                print(bar_value)
+                self.bar["value"] = smoothed_bar_value
 
 
             self.update_job = self.after(300, self.update_bar)
@@ -315,10 +319,14 @@ class Tuning_interface(tk.Frame,general_methods):
     def tuning_bar_scaling(self):
 
         # convert pitch difference into a progress value 0..100 (50 is in-tune)
+
         if not self.target_pitch or self.pitch <= 0:
             return 0
+        
         cents_difference = 1200 * math.log2(self.pitch / self.target_pitch)
+        
         progressbar_value = 50 + cents_difference # scale cents to 0-100 reasonably
+        print(progressbar_value)
         return max(0, min(100, progressbar_value))
 
 
@@ -334,6 +342,7 @@ class Tuning_interface(tk.Frame,general_methods):
         freq = self.note_to_frequency(note, octave)
         print(note, octave,freq)
         self.selected_string = index
+        print(f"this is {freq}")
         self.target_pitch = freq
         self.string_label.config(text=f"String {index} -> {note} {octave} ({round(freq,2)} Hz)")
 
@@ -359,6 +368,11 @@ class Tuning_interface(tk.Frame,general_methods):
             else:
                 button.config(text="N/A")
 
+
+    def low_pass_filter (self, new_value): # smooths out the progress bar 
+        
+        self.filtered_bar_value = (self.filter_strength * new_value + (1 - self.filter_strength) * self.filtered_bar_value)
+        return self.filtered_bar_value
 
 
 
