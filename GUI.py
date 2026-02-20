@@ -210,6 +210,7 @@ class Tuning_interface(tk.Frame,general_methods):
         self.update_job = None 
         self.tuning_data_retrival()
         self.list_string_button=[]
+        self.target_pitch=None
 
         self.bar=Progressbar(self,
                         orient=HORIZONTAL,
@@ -278,8 +279,9 @@ class Tuning_interface(tk.Frame,general_methods):
                 if self.pitch>100:
                     self.pitch=100
 
-                self.bar["value"]=self.pitch
-                self.update()
+                bar_value = self.tuning_bar_scaling()
+                self.bar["value"] = bar_value
+
 
             self.update_job = self.after(300, self.update_bar)
 
@@ -316,7 +318,7 @@ class Tuning_interface(tk.Frame,general_methods):
         if not self.target_pitch or self.pitch <= 0:
             return 0
         cents_difference = 1200 * math.log2(self.pitch / self.target_pitch)
-        progressbar_value = 50 + cents_difference / 24.0  # scale cents to 0-100 reasonably
+        progressbar_value = 50 + cents_difference # scale cents to 0-100 reasonably
         return max(0, min(100, progressbar_value))
 
 
@@ -324,6 +326,7 @@ class Tuning_interface(tk.Frame,general_methods):
 
         if not hasattr(self, "notes") or index-1 >= len(self.notes):
             self.string_label.config(text="Invalid string / tuning data missing")
+            self.target_pitch=0
             return
         
         note = self.notes[index-1]
