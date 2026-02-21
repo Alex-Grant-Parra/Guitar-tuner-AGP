@@ -5,6 +5,7 @@ from tkinter.ttk import *
 from getting_pitch import Getting_pitch
 from database import Database
 import math
+import tkinter.messagebox as mb
 
 
 class general_methods():
@@ -19,7 +20,10 @@ class general_methods():
         database_object= Database()
         database_object.check_exist()
         tuning_names=database_object.retrieve_database_collum("Tuning_name")
-        self.intial_tuning_name = str(tuning_names[0])
+        try:
+            self.intial_tuning_name = str(tuning_names[0])
+        except:
+            print("No Tuning Found")
 
 
     def get_tuning_name(self):
@@ -39,7 +43,10 @@ class App_interface(tk.Tk,general_methods):
 
         container = tk.Frame(self)
         container.pack(fill="both", expand=True)
-        tuning_name=self.get_tuning_name()
+        try:        
+            tuning_name=self.get_tuning_name()
+        except:
+            tuning_name =None
         
         # Configure grid weights so frames expand to fill screen
         container.grid_rowconfigure(0, weight=1)
@@ -282,7 +289,7 @@ class Tuning_interface(tk.Frame,general_methods):
             filtered_value = self.low_pass_filter(bar_value)
             self.bar["value"] = filtered_value
 
-
+            self.is_in_tune()
             self.update_job = self.after(50, self.update_bar)
 
 
@@ -334,7 +341,12 @@ class Tuning_interface(tk.Frame,general_methods):
 
     def select_string(self, index):
 
-        if not hasattr(self, "notes") or index-1 >= len(self.notes):
+        try:
+            if not hasattr(self, "notes") or index-1 >= len(self.notes):
+                self.string_label.config(text="Invalid string / tuning data missing")
+                self.target_pitch=0
+                return
+        except:
             self.string_label.config(text="Invalid string / tuning data missing")
             self.target_pitch=0
             return
@@ -368,6 +380,16 @@ class Tuning_interface(tk.Frame,general_methods):
                 button.config(text=f"{note}{octave}")
             else:
                 button.config(text="N/A")
+
+    def is_in_tune(self):
+
+        try:
+            if self.pitch > self.target_pitch+0.2 or self.pitch < self.target_pitch - 0.2:
+                self.hertz_value.config(fg="red")
+            else:
+                self.hertz_value(fg="green")
+        except:
+            self.hertz_value.config(fg="red")
 
 
 
@@ -603,7 +625,16 @@ class Tuning_editor (tk.Frame,general_methods):
                 
 
     def delete_tuning(self):
-        pass
+        
+        name_index=self.tunings_list.curselection()
+        if name_index:
+            name_index = name_index[0]
+            tuning_name= self.tunings_list.get(name_index)
+            double_check=mb.askquestion(f"Delete {tuning_name}?","Are Your sure?")
+            if double_check == "yes":
+                self.database.delete_tuning(tuning_name)
+                self.update_database_list()
+
 
     def on_show(self):
         pass
@@ -746,6 +777,12 @@ class Tuning_list(tk.Frame,general_methods):
         tuning_name_list=self.database.retrieve_database_collum("Tuning_name")
         for names in tuning_name_list:
             self.tunings_list.insert(tk.END,names)
+        
+        if len(tuning_name_list) == 0:
+            self.current_tuning_name_label.config(text="")
+            self.current_tuning_display.config(text="No Tuning Chosen")
+            self.__chosen_tuning=None
+            self.send_tuning()
 
 
     def send_tuning (self):
